@@ -66,7 +66,7 @@ class appWin(QMainWindow):
         font.setFamily("微软雅黑")
         QApplication.setFont(font)
         self.setWindowTitle("清华大学网络学堂")
-        self.setWindowIcon(QtGui.QIcon(".\\2.png"))
+        self.setWindowIcon(QtGui.QIcon(".\\pic\\2.png"))
         self.username = ''
         self.password = ''
         self.memPass = False
@@ -112,10 +112,10 @@ class appWin(QMainWindow):
         self.lineEdit_2.setGeometry(QtCore.QRect(250, 160, 121, 31))
         self.lineEdit_2.setStyleSheet("background:rgb(255, 255, 255)")
         self.lineEdit_2.setEchoMode(QLineEdit.Password)
-        code = open(".\\logInfo.txt", "r")
+        code = open(".\\log\\logInfo.txt", "r")
         lines = code.readlines()
         code.close()
-        if(lines.__len__() != 0):
+        if(lines.__len__() > 1):
             self.preUsername = []
             self.prePassword = {}
             t = 0
@@ -138,8 +138,9 @@ class appWin(QMainWindow):
             if self.prePassword[self.usernameCombo.currentText()] != "":
                 self.checkBox.setChecked(True)
         else:
-            code = open(".\\logInfo.txt", "w+")
+            code = open(".\\log\\logInfo.txt", "w+")
             code.write("0\n")
+            code.close()
         self.label.setText("清华大学网络学堂")
         self.label.setVisible(False)
         self.label_2.setText("账号")
@@ -198,7 +199,7 @@ class appWin(QMainWindow):
         if self.memPass is False:
             self.password = ""
 
-        code = open(".\\logInfo.txt", "r+")
+        code = open(".\\log\\logInfo.txt", "r+")
         lines = code.readlines()
         code.close()
         flag = 0
@@ -220,7 +221,7 @@ class appWin(QMainWindow):
             lines[1] = lines[lines.__len__() - 1]
             lines[lines.__len__() - 1] = tmp
 
-        code = open(".\\logInfo.txt", 'w+')
+        code = open(".\\log\\logInfo.txt", 'w+')
         for line in lines:
             code.write(line)
         code.close()
@@ -252,7 +253,7 @@ class appWin(QMainWindow):
         noteNum = self.notices.__len__()
         X = 0
         Y = (uniHeight) * num + miniHeight + 5
-        pixmap = QtGui.QPixmap(".\\1.png")
+        pixmap = QtGui.QPixmap(".\\pic\\1.png")
         label1 = QLabel(self.centralWidget)
         label1.setPixmap(pixmap)
         label1.setGeometry(leftWhite - 3, 5, miniHeight - 5, miniHeight - 5)
@@ -317,7 +318,7 @@ class appWin(QMainWindow):
                         h['course'] = course['name']
                         self.hws.append(h)
         hw_num = self.hws.__len__()
-        pixmap = QtGui.QPixmap(".\\3.png")
+        pixmap = QtGui.QPixmap(".\\pic\\3.png")
         label1 = QLabel(self.centralWidget)
         label1.setPixmap(pixmap)
         label1.setGeometry(leftWhite - 3, Y, miniHeight, miniHeight)
@@ -388,7 +389,7 @@ class appWin(QMainWindow):
         fileNum = 0
         for i in Courses:
             fileNum += i['file'].__len__()
-        pixmap = QtGui.QPixmap(".\\9.png")
+        pixmap = QtGui.QPixmap(".\\pic\\9.png")
         label1 = QLabel(self.centralWidget)
         label1.setPixmap(pixmap)
         label1.setGeometry(leftWhite - 3, Y, miniHeight, miniHeight)
