@@ -16,9 +16,16 @@ def logIn(userid, userpass):     #抓取所有文本信息
     global login_data
     global course_info
     login_data = {'userid': userid, 'userpass': userpass}
-    s.post('https://learn.tsinghua.edu.cn/MultiLanguage/lesson/teacher/loginteacher.jsp', login_data)
-    r = s.get('http://learn.tsinghua.edu.cn/MultiLanguage/lesson/student/MyCourse.jsp?language=cn')
+    try:
+        s.post('https://learn.tsinghua.edu.cn/MultiLanguage/lesson/teacher/loginteacher.jsp', login_data)
+        r = s.get('http://learn.tsinghua.edu.cn/MultiLanguage/lesson/student/MyCourse.jsp?language=cn')
+    except:
+        return (False, 1)  #错误代码1：网络未连接
+
     soup = BeautifulSoup(r.text, 'html.parser')
+    if len(soup) == 0:
+        return (False, 2)   #错误代码2：用户名或密码不正确
+
     tr_list = soup.find_all(name='tr', class_='info_tr2') + soup.find_all(name='tr', class_='info_tr')
 
     course_url = []                                 #利用主界面抓取的课程号构建所有url，并且存储主界面信息
@@ -102,7 +109,7 @@ def logIn(userid, userpass):     #抓取所有文本信息
                 attachname = tem_attachname.a.text
             course[i]['homework'].append({'name': tem[0], 'release_time': tem[1], 'ddl': tem[2], 'ifsubmit': tem[3],
                                           'memory': tem[4], 'title_url': url, 'filename': filename, 'attachname': attachname})
-    return course
+    return (True, course)
 
 
 def get_file(name, url, path=''):  #调用方式参考: get_file(name=course[0]['file'][0]['title'], url=course[0]['file'][0]['url'], path='F:\\')
@@ -139,6 +146,11 @@ def get_notice_content(url):
         content = content.text
     content = content.replace('\xa0', ' ')
     return content
+
+def initial():
+    global courses, course
+    courses = []
+    course = []
 
 if __name__ == "__main__":
     courses = logIn("wangsiyu15", "wsy13579+")

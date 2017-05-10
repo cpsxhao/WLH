@@ -44,8 +44,11 @@ import os
  }
 ]'''
 
+preCourses = ()
 Courses = []
 
+logWidth = 591
+logHeight = 377
 width = 1000
 height = 870
 uniHeight = 250
@@ -66,6 +69,9 @@ class appWin(QMainWindow):
         self.setWindowIcon(QtGui.QIcon(".\\2.png"))
         self.username = ''
         self.password = ''
+        self.memPass = False
+        self.auto = False
+        self.logTimes = 0
         self.resize(591, 377)
         self.logWidget = QWidget(self)
         self.logWidget.setGeometry(0, 0, 591, 377)
@@ -91,33 +97,91 @@ class appWin(QMainWindow):
         self.checkBox = QCheckBox(self.logWidget)
         self.checkBox.setGeometry(QtCore.QRect(150, 220, 91, 19))
         self.checkBox.setObjectName("checkBox")
+        self.checkBox.stateChanged.connect(self.rememberPassword)
+
         self.checkBox_2 = QCheckBox(self.logWidget)
         self.checkBox_2.setGeometry(QtCore.QRect(310, 220, 91, 19))
         self.checkBox_2.setObjectName("checkBox_2")
-        self.lineEdit = QLineEdit(self.logWidget)
-        self.lineEdit.setGeometry(QtCore.QRect(250, 110, 121, 31))
-        self.lineEdit.setStyleSheet("background:rgb(255, 255, 255)")
-        self.lineEdit.setObjectName("lineEdit")
+        self.checkBox_2.stateChanged.connect(self.autoLogIn)
+
+        self.usernameCombo = QComboBox(self.logWidget)
+        self.usernameCombo.setGeometry(QtCore.QRect(250, 110, 121, 31))
+        self.usernameCombo.setStyleSheet("background:rgb(255, 255, 255)")
+        self.usernameCombo.setEditable(True)
         self.lineEdit_2 = QLineEdit(self.logWidget)
         self.lineEdit_2.setGeometry(QtCore.QRect(250, 160, 121, 31))
         self.lineEdit_2.setStyleSheet("background:rgb(255, 255, 255)")
         self.lineEdit_2.setEchoMode(QLineEdit.Password)
+        code = open(".\\logInfo.txt", "r+")
+        lines = code.readlines()
+        code.close()
+        if(lines.__len__() != 0):
+            self.preUsername = []
+            self.prePassword = {}
+            t = 0
+            for line in lines:
+                if t == 0:
+                    self.auto = eval(line[0])
+                    t += 1
+                    continue
+                tmpuser = line.split(" ")[0]
+                tmppass = line.split(" ")[1]
+                tmppass = tmppass[0: tmppass.__len__() - 1]
+                self.preUsername.append(tmpuser)
+                self.prePassword[tmpuser] = tmppass
+                t += 1
+            i = 0
+            for username in self.preUsername:
+                self.usernameCombo.insertItem(i, self.tr(username))
+            self.usernameCombo.currentIndexChanged.connect(self.usernameChange)
+            self.lineEdit_2.setText(self.prePassword[self.usernameCombo.currentText()])
+            if self.prePassword[self.usernameCombo.currentText()] != "":
+                self.checkBox.setChecked(True)
+        else:
+            code = open(".\\logInfo.txt", "w+")
+            code.write("0\n")
         self.label.setText("清华大学网络学堂")
+        self.label.setVisible(False)
         self.label_2.setText("账号")
         self.label_3.setText("密码")
         self.pushButton.setText("登录")
         self.checkBox.setText("记住密码")
         self.checkBox_2.setText("自动登录")
+        if self.auto:
+            self.LogIn()
         self.show()
+
+    def usernameChange(self):
+        curPassword = self.prePassword[self.usernameCombo.currentText()]
+        self.lineEdit_2.setText(curPassword)
+        if self.prePassword[self.usernameCombo.currentText()] != "":
+            self.checkBox.setChecked(True)
+        else:
+            self.checkBox.setChecked(False)
+
+    def rememberPassword(self, state):
+        self.memPass = True if state == QtCore.Qt.Checked else False
+
+    def autoLogIn(self, state):
+        self.auto = True if state == QtCore.Qt.Checked else False
 
     def LogIn(self):
         self.pushButton.setText("正在登录...")
-        self.username = self.lineEdit.text()
+        self.username = self.usernameCombo.currentText()
         self.password = self.lineEdit_2.text()
+        global preCourses
         global Courses
-        Courses = core.logIn(self.username, self.password)
+        preCourses = core.logIn(self.username, self.password)
+        if preCourses[0] == False:
+            if preCourses[1] == 1:
+                QMessageBox.warning(self, "警告", "网络未连接！")
+            else:
+                QMessageBox.warning(self, "警告", "用户名或密码错误！")
+            self.pushButton.setText("登录")
+            return 0
+        Courses = preCourses[1]
         self.logWidget.setVisible(False)
-        self.resize(width, height)
+        self.setFixedSize(width, height)
 
         self.statusBar()
         self.mymenuBar()
@@ -131,6 +195,36 @@ class appWin(QMainWindow):
         self.center()
         self.show()
 
+        if self.memPass is False:
+            self.password = ""
+
+        code = open(".\\logInfo.txt", "r+")
+        lines = code.readlines()
+        code.close()
+        flag = 0
+        for i in range(lines.__len__()):
+            if lines[i].split(" ")[0] == self.username:
+                flag = 1
+                lines[i] = self.username + " " + self.password + "\n"
+                tmp = lines[1]
+                lines[1] = lines[i]
+                lines[i] = tmp
+                break
+        if self.auto:
+            lines[0] = "1\n"
+        else:
+            lines[0] = "0\n"
+        if not flag:
+            lines.append(self.username + " " + self.password + "\n")
+            tmp = lines[1]
+            lines[1] = lines[lines.__len__() - 1]
+            lines[lines.__len__() - 1] = tmp
+
+        code = open(".\\logInfo.txt", 'w+')
+        for line in lines:
+            code.write(line)
+        code.close()
+
     def mymenuBar(self):
         logoutAction = QAction("登出账号", self)
         logoutAction.setShortcut("Ctrl+O")
@@ -141,10 +235,12 @@ class appWin(QMainWindow):
         QuitAction.setStatusTip("将退出程序")
         QuitAction.triggered.connect(qApp.quit)
         self.menubar = self.menuBar()
+        self.menubar.setVisible(True)
+        if self.logTimes != 0:
+            return 1
         self.QuitMenu = self.menubar.addMenu("退出")
         self.QuitMenu.addAction(logoutAction)
         self.QuitMenu.addAction(QuitAction)
-        pass
 
     def NoticeConstruct(self, num):
         self.notices = []
@@ -234,6 +330,11 @@ class appWin(QMainWindow):
         label3 = QLabel(self.centralWidget)
         label3.setText("发布日期")
         label3.setGeometry(720, Y, 100, miniHeight)
+        remindButton = QPushButton(self.centralWidget)
+        remindButton.setText("添加提醒")
+        remindButton.setGeometry(850, Y + 2, 100, miniHeight - 4)
+        remindButton.clicked.connect(self.remindHW)
+
         Y += miniHeight
         self.hwScroll = QScrollArea(self.centralWidget)
         self.hwScroll.setGeometry(QtCore.QRect(X, Y, width, uniHeight))
@@ -294,6 +395,10 @@ class appWin(QMainWindow):
         label0 = QLabel(self.centralWidget)
         label0.setText("所有文件")
         label0.setGeometry(leftWhite + miniHeight, Y, width / 2, miniHeight)
+        button = QPushButton(self.centralWidget)
+        button.setText("一键下载新文件")
+        button.setGeometry(750, Y + 2, 150, miniHeight - 4)
+        button.clicked.connect(self.downloadAllFiles)
         Y += miniHeight
         self.fileScroll = QScrollArea(self.centralWidget)
         self.fileScroll.setGeometry(QtCore.QRect(X, Y, width, uniHeight))
@@ -372,14 +477,31 @@ class appWin(QMainWindow):
 
     def logout(self):
         self.centralWidget.setVisible(False)
-        self.resize(591, 377)
+        self.menubar.setVisible(False)
+        self.setFixedSize(logWidth, logHeight)
         self.logWidget.setVisible(True)
         self.pushButton.setText("登录")
+        if(self.auto):
+            self.checkBox_2.setChecked(True)
+        else:
+            self.checkBox_2.setChecked(False)
+        self.logTimes += 1
         self.center()
+        core.initial()
 
     def downloadFile(self):
         sender = self.sender()
         i = eval(sender.objectName())
+        self.getFile(i)
+
+    def downloadAllFiles(self):
+        i = 0
+        for file in self.files:
+            if file['state'] == "新文件":
+                self.getFile(i)
+            i += 1
+
+    def getFile(self, i):
         file = self.files[i]
         url = file['url']
         name = file['title']
@@ -423,6 +545,23 @@ class appWin(QMainWindow):
         title = self.notices[i]['title']
         content = core.get_notice_content(url)
         QMessageBox.information(self, title, content)
+
+    def remindHW(self):
+        code = open(".\\未交作业统计.txt", "w+")
+        tmp = ""
+        for hw in self.hws:
+            tmp = hw['ddl'] + ":" + hw['name'] + "\n"
+            try:
+                code.write(hw['name'])
+            except:
+                QMessageBox.warning(self, "警告", "保存失败！")
+                code.close()
+                return False
+        code.close()
+        QMessageBox.information(self, "通知", "保存成功！")
+
+def hash(pre):
+    pass
 
 
 if __name__ == "__main__":
