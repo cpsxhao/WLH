@@ -112,7 +112,7 @@ class appWin(QMainWindow):
         self.lineEdit_2.setGeometry(QtCore.QRect(250, 160, 121, 31))
         self.lineEdit_2.setStyleSheet("background:rgb(255, 255, 255)")
         self.lineEdit_2.setEchoMode(QLineEdit.Password)
-        code = open(".\\logInfo.txt", "r+")
+        code = open(".\\logInfo.txt", "r")
         lines = code.readlines()
         code.close()
         if(lines.__len__() != 0):
