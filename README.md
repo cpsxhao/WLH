@@ -1,6 +1,6 @@
 # Tsinghua WebLearning Helper
 
-#### Information: 
+#### Information 
 helper for Tsinghua weblearning： [清华大学网络学堂](http://learn.tsinghua.edu.cn)  
 coded in python
 
@@ -9,7 +9,7 @@ To use this WebLearing Helper, you need to configure your python environment.
 Please refer to ./help/prepare.pdf .
   
 
-#### Contact Infomation:
+#### Contact Infomation
 Electronic Enginerring Department, Tsinghua University, Haidian District, Beijing  
 Class wu53  
   E-mail: wang_sy1997@163.com  
